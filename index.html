@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Basepath — Every pitch, every box score</title>
+  <meta name="description" content="Free MLB scoreboard, pitch-by-pitch gamecast, box scores and player stats. Fast, dense, no clutter." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <script>
+    // Apply saved theme before paint (mirrors src/shared/theme.ts)
+    (function () {
+      try {
+        var p = localStorage.getItem('bp.theme') || 'auto';
+        var t = p === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : p;
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="site">
+  <div class="site-top">
+    <div class="wrap site-top-inner">
+      <a class="site-logo" href="/"><span class="site-logo-mark">◆</span> Basepath</a>
+      <nav class="site-nav">
+        <a href="#features">Features</a>
+        <a href="#gamecast">Gamecast</a>
+        <a href="#faq">FAQ</a>
+        <button type="button" class="site-theme" id="themeToggle">Dark mode</button>
+        <a class="btn primary" href="/app/">Open Scoreboard &raquo;</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="ticker" id="ticker" hidden>
+    <div class="wrap ticker-inner">
+      <span class="ticker-label">Today</span>
+      <div class="ticker-games" id="tickerGames"></div>
+      <a class="ticker-all" href="/app/">All scores &raquo;</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="hero-copy">
+        <h1>Follow every pitch without the noise.</h1>
+        <p class="lede">
+          Basepath is a fast, no-nonsense MLB scoreboard. Live games read like a
+          broadcaster's scorebook: the count, the runners, every pitch with its speed
+          and location, and a plain-English log of what just happened.
+        </p>
+        <ul class="checks">
+          <li>Live gamecast, pitch by pitch</li>
+          <li>Classic box scores and line scores</li>
+          <li>Player pages with season and career stats</li>
+          <li>Game chat rooms for every matchup</li>
+        </ul>
+        <p>
+          <a class="btn primary big" href="/app/">Open today's scoreboard &raquo;</a>
+          <span class="muted small">Free. No account needed.</span>
+        </p>
+      </div>
+      <div class="hero-shot" aria-hidden="true">
+        <!-- A static, hand-built "screenshot" of the gamecast; no image assets needed. -->
+        <div class="shot">
+          <div class="shot-bar"><b>TB 3</b> &nbsp;@&nbsp; <b>CLE 5</b> <span class="shot-live">● Bot 7th</span></div>
+          <table class="shot-line">
+            <tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>R</th><th>H</th><th>E</th></tr>
+            <tr><td>TB</td><td>0</td><td>1</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td><td></td><td></td><td><b>3</b></td><td>7</td><td>0</td></tr>
+            <tr><td>CLE</td><td>2</td><td>0</td><td>0</td><td>1</td><td>0</td><td>2</td><td class="cur">0</td><td></td><td></td><td><b>5</b></td><td>9</td><td>1</td></tr>
+          </table>
+          <div class="shot-now">
+            <div class="shot-headline">Pitch 4: Sweeper, 84 mph — <span style="color:var(--strike)">Swinging strike</span>. Count 1-2.</div>
+            <div class="shot-grid">
+              <svg viewBox="0 0 120 120" class="shot-zone">
+                <rect x="38" y="30" width="44" height="54" fill="none" stroke="currentColor" stroke-opacity=".5" />
+                <circle cx="52" cy="70" r="6" fill="var(--strike)" /><text x="52" y="73" font-size="8" text-anchor="middle" fill="#fff">1</text>
+                <circle cx="92" cy="40" r="6" fill="var(--ball)" /><text x="92" y="43" font-size="8" text-anchor="middle" fill="#fff">2</text>
+                <circle cx="66" cy="52" r="6" fill="var(--strike)" /><text x="66" y="55" font-size="8" text-anchor="middle" fill="#fff">3</text>
+                <circle cx="78" cy="88" r="6" fill="var(--strike)" /><text x="78" y="91" font-size="8" text-anchor="middle" fill="#fff">4</text>
+              </svg>
+              <table class="shot-pitches">
+                <tr><td>1</td><td>Four-Seam 96</td><td class="s">Called Strike</td></tr>
+                <tr><td>2</td><td>Sweeper 85</td><td class="b">Ball</td></tr>
+                <tr><td>3</td><td>Four-Seam 97</td><td class="s">Foul</td></tr>
+                <tr><td>4</td><td>Sweeper 84</td><td class="s">Swinging Strike</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="shot-log">
+            <div><span class="tag hit">1B</span> Kwan singles on a line drive to right fielder Lowe.</div>
+            <div><span class="tag out">FO</span> Rocchio flies out to center fielder Siri.</div>
+            <div><span class="tag k">K</span> Ramírez strikes out swinging.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols" id="features">
+      <div class="col">
+        <h3>Scoreboard first</h3>
+        <p>
+          Every game of the day on one screen: line scores, who's pitching, who's up,
+          runners on base and decisions for final games. Flip to yesterday in one click.
+        </p>
+      </div>
+      <div class="col">
+        <h3>A gamecast you can read</h3>
+        <p>
+          The situation is always at the top. The current at-bat shows every pitch on a
+          strike-zone plot. Below it, completed plays scroll by in plain English, newest
+          first, with scoring plays called out.
+        </p>
+      </div>
+      <div class="col">
+        <h3>Everything links</h3>
+        <p>
+          Click a game for its box score, a player for his stats and game log, a team for
+          its schedule and roster. It all comes from MLB's own live data feed.
+        </p>
+      </div>
+    </div>
+
+    <div class="band" id="gamecast">
+      <h2>How the gamecast works</h2>
+      <table class="how">
+        <tr>
+          <th>1. The situation</th>
+          <td>Score, inning, outs, count and baserunners (by name), always pinned to the top. If you look away, glance here first.</td>
+        </tr>
+        <tr>
+          <th>2. The at-bat</th>
+          <td>The last thing that happened, in one sentence. Then the pitcher vs. batter matchup with today's lines, and every pitch: type, speed, result and where it crossed the plate.</td>
+        </tr>
+        <tr>
+          <th>3. The story so far</th>
+          <td>Each finished plate appearance, one line apiece, grouped by half-inning with a summary when the inning ends. Click any play to see its pitches and batted-ball data.</td>
+        </tr>
+        <tr>
+          <th>Missed it?</th>
+          <td>Any finished game can be replayed pitch by pitch, exactly as it unfolded live.</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="band" id="faq">
+      <h2>FAQ</h2>
+      <dl class="faq">
+        <dt>Is it free?</dt>
+        <dd>Yes. There's no account and nothing to install.</dd>
+        <dt>Where does the data come from?</dt>
+        <dd>MLB's public Stats API, the same feed that powers MLB's own Gameday. Live games update every few seconds.</dd>
+        <dt>Is there video?</dt>
+        <dd>No. Basepath is built for following along when you can't watch: at work, on the train, or with the game on the radio.</dd>
+        <dt>Does it work on my phone?</dt>
+        <dd>Yes. The layout collapses to a single column on small screens.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="site-foot">
+    <div class="wrap">
+      <a href="/app/">Scoreboard</a> &middot; <a href="/app/#/standings">Standings</a> &middot; <a href="#faq">FAQ</a>
+      <p class="muted">
+        Basepath is an independent fan project and is not affiliated with or endorsed by Major League Baseball.
+        Game data and team marks &copy; MLB Advanced Media, L.P., used for personal, non-commercial purposes.
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/site/main.ts"></script>
+</body>
+</html>

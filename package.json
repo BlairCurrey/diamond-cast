@@ -1,0 +1,21 @@
+{
+  "name": "basepath",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MLB scoreboard, live gamecast and box scores built on the public MLB Stats API. Static site, no backend.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "typescript": "^7.0.2",
+    "vite": "^6.4.4"
+  },
+  "dependencies": {
+    "preact": "^11.0.1"
+  }
+}

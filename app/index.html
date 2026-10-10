@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scoreboard — Basepath</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <script>
+    (function () {
+      try {
+        var p = localStorage.getItem('bp.theme') || 'auto';
+        var t = p === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : p;
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="app">
+  <div id="app"></div>
+  <noscript>This app needs JavaScript. <a href="/">Back to the home page</a>.</noscript>
+  <script type="module" src="/src/app/main.tsx"></script>
+</body>
+</html>

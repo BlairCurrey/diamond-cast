@@ -1,0 +1,129 @@
+/* ---------------------------------------------------------------------------
+   Shared design tokens + base typography for both the marketing site and the app.
+   Everything visual reads from these variables, so a restyle starts here.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: Menlo, Consolas, "Liberation Mono", monospace;
+  --fs: 13px;
+  --fs-sm: 11px;
+  --fs-lg: 15px;
+
+  --bg: #e9eaec;            /* page canvas */
+  --panel: #ffffff;         /* boxes / tables */
+  --panel-alt: #f6f6f7;     /* zebra rows, insets */
+  --bar-1: #fbfbfb;         /* section header gradient */
+  --bar-2: #e7e8ea;
+  --border: #c9cbcf;
+  --border-soft: #e1e2e5;
+  --text: #1d1f22;
+  --muted: #676b72;
+  --link: #1a4f9c;
+  --link-visited: #1a4f9c;
+  --chrome: #2a2e35;        /* dark top bar */
+  --chrome-2: #1d2026;
+  --chrome-text: #e9ecf0;
+  --chrome-muted: #a4abb6;
+  --highlight: #fff6d6;     /* "just changed" flash, current inning */
+  --focus: #3b82f6;
+
+  /* semantic baseball colors (pitch results + play outcomes) */
+  --ball: #2e8b3a;
+  --strike: #c62828;
+  --inplay: #1f5fbf;
+  --live: #c62828;
+  --score: #b06d00;
+  --hr: #8a1c7c;
+
+  --away-line: #6b7280;
+  --home-line: #1a4f9c;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #121417;
+  --panel: #1b1e22;
+  --panel-alt: #20242a;
+  --bar-1: #2a2e34;
+  --bar-2: #23272c;
+  --border: #3a3f46;
+  --border-soft: #2c3036;
+  --text: #e4e6ea;
+  --muted: #9aa1ab;
+  --link: #8cb4ff;
+  --link-visited: #8cb4ff;
+  --chrome: #0b0c0e;
+  --chrome-2: #0b0c0e;
+  --chrome-text: #e4e6ea;
+  --chrome-muted: #8a919c;
+  --highlight: #3a3418;
+  --ball: #4fbf5d;
+  --strike: #ef5350;
+  --inplay: #5c9bff;
+  --live: #ff5a52;
+  --score: #f0ad3d;
+  --hr: #d77bd0;
+  --away-line: #9aa1ab;
+  --home-line: #8cb4ff;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  font-size: var(--fs);
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:visited { color: var(--link-visited); }
+
+h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* Classic 2010-style button: subtle gradient, 1px border */
+.btn {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: linear-gradient(var(--bar-1), var(--bar-2));
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.btn:hover { text-decoration: none; border-color: var(--muted); }
+.btn:active { background: var(--bar-2); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.btn.primary {
+  background: linear-gradient(#2f6fd0, #1d55aa);
+  border-color: #1a4d9b;
+  color: #fff;
+}
+:root[data-theme="dark"] .btn.primary { background: linear-gradient(#3e7be0, #2a62bd); border-color: #2a62bd; }
+a.btn, a.btn:visited { color: var(--text); }
+a.btn.primary, a.btn.primary:visited { color: #fff; }
