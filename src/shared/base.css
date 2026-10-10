@@ -21,10 +21,12 @@
   --muted: #676b72;
   --link: #1a4f9c;
   --link-visited: #1a4f9c;
-  --chrome: #2a2e35;        /* dark top bar */
-  --chrome-2: #1d2026;
-  --chrome-text: #e9ecf0;
-  --chrome-muted: #a4abb6;
+  --chrome: #ffffff;        /* top bar (site header + app bar) */
+  --chrome-2: #f1f2f4;
+  --chrome-border: #c9cbcf;
+  --chrome-text: #1d1f22;
+  --chrome-muted: #676b72;
+  --brand: #d33a3a;         /* logo mark */
   --highlight: #fff6d6;     /* "just changed" flash, current inning */
   --focus: #3b82f6;
 
@@ -54,10 +56,12 @@
   --muted: #9aa1ab;
   --link: #8cb4ff;
   --link-visited: #8cb4ff;
-  --chrome: #0b0c0e;
-  --chrome-2: #0b0c0e;
+  --chrome: #262a31;
+  --chrome-2: #1f2328;
+  --chrome-border: #3a3f46;
   --chrome-text: #e4e6ea;
-  --chrome-muted: #8a919c;
+  --chrome-muted: #9aa1ab;
+  --brand: #e85454;
   --highlight: #3a3418;
   --ball: #4fbf5d;
   --strike: #ef5350;
