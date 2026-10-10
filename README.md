@@ -6,9 +6,9 @@ and a docked chat). Data comes straight from the browser to MLB's public Stats A
 No backend.
 
 ```
-npm install
-npm run dev          # http://localhost:5173/  and  /app/
-npm run build        # static output in dist/ — deploy anywhere (Netlify, Pages, S3…)
+pnpm install
+pnpm dev              # http://localhost:5173/  and  /app/
+pnpm build            # static output in dist/ — deploy anywhere (Netlify, Pages, S3…)
 ```
 
 Add `?mock` to the app URL (`/app/?mock`) to run on a built-in simulated slate of
@@ -42,7 +42,7 @@ views/CSS; the data layer stays put.
 The gamecast replaces watching, so it's ordered by how fast you need each thing.
 **Now**: one sentence for the last thing that happened (each pitch, or the play
 result), with the previous play underneath so a glance catches you up; then the
-situation (inning, diamond with runners *by name*, count/outs lights), the strike
+situation (inning, diamond with runners _by name_, count/outs lights), the strike
 zone with numbered pitches, the matchup with today's lines, and the pitch list.
 **The story so far**: every finished plate appearance as one plain-English line,
 newest first, grouped by half-inning, with a run/hit/error/LOB summary as each half
@@ -58,15 +58,15 @@ replay moment so nothing is spoiled.
 
 All calls are in `src/app/api/endpoints.ts`:
 
-| What | Endpoint |
-|---|---|
-| Day's games | `/api/v1/schedule?sportId=1&date=…&hydrate=team,linescore,probablePitcher,decisions,seriesStatus,broadcasts(all)` |
-| Game feed | `/api/v1.1/game/{pk}/feed/live` (gameData + liveData: plays, linescore, boxscore) |
-| Live diffs | `/api/v1.1/game/{pk}/feed/live/diffPatch?startTimecode=…` (JSON Patch; falls back to full) |
-| Time travel | `/api/v1.1/game/{pk}/feed/live?timecode=yyyyMMdd_HHmmss` (replay) |
-| Win prob | `/api/v1/game/{pk}/winProbability` |
-| Player | `/api/v1/people/{id}?hydrate=currentTeam,stats(…)` |
-| Standings, roster | `/api/v1/standings`, `/api/v1/teams/{id}/roster` |
+| What              | Endpoint                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Day's games       | `/api/v1/schedule?sportId=1&date=…&hydrate=team,linescore,probablePitcher,decisions,seriesStatus,broadcasts(all)` |
+| Game feed         | `/api/v1.1/game/{pk}/feed/live` (gameData + liveData: plays, linescore, boxscore)                                 |
+| Live diffs        | `/api/v1.1/game/{pk}/feed/live/diffPatch?startTimecode=…` (JSON Patch; falls back to full)                        |
+| Time travel       | `/api/v1.1/game/{pk}/feed/live?timecode=yyyyMMdd_HHmmss` (replay)                                                 |
+| Win prob          | `/api/v1/game/{pk}/winProbability`                                                                                |
+| Player            | `/api/v1/people/{id}?hydrate=currentTeam,stats(…)`                                                                |
+| Standings, roster | `/api/v1/standings`, `/api/v1/teams/{id}/roster`                                                                  |
 
 Live polling follows `metaData.wait` (clamped 5–15s) and pauses in background tabs.
 Pitch locations are `pitchData.coordinates.pX/pZ` (feet, catcher's view) against the
@@ -89,7 +89,7 @@ The backend is a black box behind `chat/transport.ts`:
 ```ts
 interface ChatTransport {
   label: string;
-  subscribe(channel, onMessages): () => void;   // history first, then live
+  subscribe(channel, onMessages): () => void; // history first, then live
   send(channel, user, text): Promise<void>;
 }
 ```
