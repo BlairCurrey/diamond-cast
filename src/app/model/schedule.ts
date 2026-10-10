@@ -38,11 +38,15 @@ export interface SbGame {
   series?: string;         // "ALCS · Game 4"
   seriesStatus?: string;   // "CLE leads 2-1"
   tv?: string;
+  radio?: Radio;
   venue?: string;
   note?: string;           // postponement reason, doubleheader, extra innings
   innings: { away?: number; home?: number }[];
   scheduledInnings: number;
 }
+
+/** Radio station names, English by team plus national; Spanish-language listed apart. */
+export interface Radio { away: string[]; home: string[]; national: string[]; spanish: string[] }
 
 export function gameKind(status: any): GameKind {
   const a = status?.abstractGameState;
@@ -99,9 +103,19 @@ export function sbGame(g: any): SbGame {
   const national = tvs.filter((b: any) => b.isNational);
   const tvNames: string[] = Array.from(new Set((national.length ? national : tvs).map((b: any) => b.callSign || b.name)));
 
+  const radios = (g.broadcasts ?? []).filter((b: any) => b.type === 'AM' || b.type === 'FM');
+  const stations = (f: (b: any) => boolean): string[] => Array.from(new Set(radios.filter(f).map((b: any) => b.name || b.callSign)));
+  const en = (b: any) => !b.language || b.language === 'en';
+  const radio: Radio = {
+    away: stations((b) => en(b) && !b.isNational && b.homeAway === 'away'),
+    home: stations((b) => en(b) && !b.isNational && b.homeAway === 'home'),
+    national: stations((b) => en(b) && b.isNational),
+    spanish: stations((b) => b.language === 'es'),
+  };
+
   const series = g.gameType && g.gameType !== 'R' && g.gameType !== 'S' && g.gameType !== 'E'
-    ? [g.seriesStatus?.shortDescription ?? g.seriesDescription, g.seriesGameNumber ? `Game ${g.seriesGameNumber}` : '']
-      .filter(Boolean).join(' · ')
+    ? ((d: string | undefined) => [d, g.seriesGameNumber && !d?.includes(`Game ${g.seriesGameNumber}`) ? `Game ${g.seriesGameNumber}` : '']
+      .filter(Boolean).join(' · '))(g.seriesStatus?.shortDescription ?? g.seriesDescription)
     : undefined;
 
   let note: string | undefined;
@@ -132,6 +146,7 @@ export function sbGame(g: any): SbGame {
     series,
     seriesStatus: g.seriesStatus?.result,
     tv: tvNames.slice(0, 3).join(', ') || undefined,
+    radio: radios.length ? radio : undefined,
     venue: g.venue?.name,
     note,
     innings: (ls.innings ?? []).map((i: any) => ({ away: i.away?.runs, home: i.home?.runs })),

@@ -14,7 +14,9 @@ export function Preview({ feed }: { feed: any }) {
   const people = usePoll<any>(ids.length ? ep.peopleSeason(ids, season) : null, null, 600_000);
   const sched = usePoll<any>(h.date ? ep.schedule(h.date) : null, null, 60_000);
   const sg = sched.data?.dates?.[0]?.games?.find((g: any) => g.gamePk === h.pk);
-  const tv = sg ? sbGame(sg).tv : undefined;
+  const { tv, radio } = sg ? sbGame(sg) : {};
+  const radioMain = radio && ([[h.away.abbr, radio.away], [h.home.abbr, radio.home], ['National', radio.national]] as const)
+    .filter(([, s]) => s.length).map(([who, s]) => `${who}: ${s.join(', ')}`).join(' · ');
 
   const pitcherCard = (side: 'away' | 'home') => {
     const ref = pp[side];
@@ -70,6 +72,12 @@ export function Preview({ feed }: { feed: any }) {
             <tr><th>First pitch</th><td>{h.start ? `${fmtDateLong(h.date)}, ${fmtTime(h.start)}` : 'TBD'}</td></tr>
             {h.venue && <tr><th>Ballpark</th><td>{h.venue}</td></tr>}
             {tv && <tr><th>TV</th><td>{tv}</td></tr>}
+            {radio && (radioMain || radio.spanish.length > 0) && (
+              <tr><th>Radio</th><td>
+                {radioMain}
+                {radio.spanish.length > 0 && <div class="muted small">Spanish: {radio.spanish.join(', ')}</div>}
+              </td></tr>
+            )}
             {h.weather && <tr><th>Weather</th><td>{h.weather}</td></tr>}
             {h.series && <tr><th>Series</th><td>{h.series}{h.seriesStatus ? ` — ${h.seriesStatus}` : ''}</td></tr>}
             <tr><th>Status</th><td>{h.detailed}</td></tr>

@@ -705,7 +705,11 @@ function scheduleGame(g: GameDef) {
       probablePitcher: f.gameData.probablePitchers[s],
     }])),
     linescore: ls, decisions: f.liveData.decisions, venue: f.gameData.venue,
-    broadcasts: [{ type: 'TV', name: pick(rngFrom(g.seed), ['BSN', 'TeamTV', 'MLB.TV']), isNational: false, language: 'en' }],
+    broadcasts: [
+      { type: 'TV', name: pick(rngFrom(g.seed), ['BSN', 'TeamTV', 'MLB.TV']), isNational: false, language: 'en' },
+      ...(['away', 'home'] as const).map((s) => ({ type: 'AM', name: `${f.gameData.teams[s].teamName} Radio ${s === 'away' ? 1080 : 760}`, homeAway: s, isNational: false, language: 'en' })),
+      { type: 'AM', name: 'La Radio 1450', homeAway: 'home', isNational: false, language: 'es' },
+    ],
     doubleHeader: 'N', gameNumber: 1,
   };
 }

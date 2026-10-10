@@ -1,5 +1,7 @@
 import { useEffect } from 'preact/hooks';
-import { useGameFeed, useNow, useReplay } from '../../api/hooks';
+import { useGameFeed, useNow, usePoll, useReplay } from '../../api/hooks';
+import { ep } from '../../api/endpoints';
+import { isActive, sbGame } from '../../model/schedule';
 import { header, linescore, situation, type GameHeader } from '../../model/game';
 import { fmtDateLong, fmtTime, relTime } from '../../model/format';
 import { href } from '../../router';
@@ -66,6 +68,13 @@ function GameHead({ h, feed, updatedAt, error, replay = false, hideScore = false
 }) {
   const now = useNow(5000);
   const sit = h.kind === 'live' ? situation(feed) : undefined;
+  // Radio while the game is on: each team's flagship station (national if a team has none).
+  const sched = usePoll<any>(isActive(h.kind) && !replay ? ep.schedule(h.date) : null, null, 600_000);
+  const sg = sched.data?.dates?.[0]?.games?.find((g: any) => g.gamePk === h.pk);
+  const radio = sg ? sbGame(sg).radio : undefined;
+  const radioLine = radio && ([[h.away.abbr, radio.away[0]], [h.home.abbr, radio.home[0]]] as const)
+    .filter(([, s]) => s).map(([who, s]) => `${who} ${s}`)
+    .join(' · ') || radio?.national[0];
   const status = h.kind === 'live'
     ? `${sit!.label}${sit!.isBreak ? '' : ` · ${sit!.outs} out${sit!.outs === 1 ? '' : 's'}`}`
     : h.kind === 'final' ? (h.detailed === 'Game Over' ? 'Final' : h.detailed)
@@ -105,6 +114,7 @@ function GameHead({ h, feed, updatedAt, error, replay = false, hideScore = false
           {h.kind === 'live' && !replay && <span class="live-dot" />}
           <b>{hideScore ? 'Replay' : status}</b>
           <div class="muted small">{[h.venue, h.weather].filter(Boolean).join(' · ')}</div>
+          {radioLine && <div class="muted small gh-radio">Radio: {radioLine}</div>}
         </div>
         {side('home')}
       </div>
