@@ -22,10 +22,10 @@ export function Linescore({ away, home, innings, current, isTop, final = false, 
   };
   const row = (t: LTeam, side: 'away' | 'home') => (
     <tr>
-      <th class="ls-team">
+      <th class="ls-team"><div class="ls-teamcell">
         <a href={href.team(t.id)}><TeamLogo id={t.id} size={16} /> {t.abbr}</a>
-        {t.record && <span class="muted small"> {t.record}</span>}
-      </th>
+        {t.record && <span class="muted small">{t.record}</span>}
+      </div></th>
       {innings.map((i) => cell(i, side))}
       <td class="rhe r">{t.runs ?? ''}</td>
       <td class="rhe">{t.hits ?? ''}</td>

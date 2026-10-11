@@ -79,14 +79,14 @@ function GameCard({ g }: { g: SbGame }) {
     const t = g[side];
     return (
       <tr class={winnerClass(side)}>
-        <th class="sb-team">
+        <th class="sb-team"><div class="sb-teamcell">
           <a href={href.team(t.id)}>
             <TeamLogo id={t.id} size={18} />
             <span class="sb-abbr">{t.abbr}</span>
             <span class="sb-club">{t.club}</span>
           </a>
           {t.record && <span class="sb-rec muted">{t.record}</span>}
-        </th>
+        </div></th>
         {showLine && cols.map((i) => {
           const v = g.innings[i]?.[side];
           const cur = active && g.inning === i + 1 && ((side === 'away') === !!g.isTop);

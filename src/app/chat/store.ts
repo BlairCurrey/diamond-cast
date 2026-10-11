@@ -14,7 +14,9 @@ export interface DockState {
 const KEY = 'bp.chatdock';
 
 function load(): DockState {
-  const def: DockState = { channel: 'global', joined: [], expanded: false, height: 260, user: `fan${Math.floor(1000 + Math.random() * 9000)}` };
+  // First visit: open on desktop so chat is noticed; collapsed on phones, where it would cover most of the screen.
+  const wide = typeof matchMedia === 'function' && matchMedia('(min-width: 701px)').matches;
+  const def: DockState = { channel: 'global', joined: [], expanded: wide, height: 260, user: `fan${Math.floor(1000 + Math.random() * 9000)}` };
   try { return { ...def, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return def; }
 }
 

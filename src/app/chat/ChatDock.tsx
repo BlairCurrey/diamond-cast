@@ -72,7 +72,7 @@ export function ChatDock() {
     return (
       <div class="dock collapsed" role="region" aria-label="Chat">
         <button class="dock-bar" onClick={() => dock.toggle(true)} aria-expanded="false">
-          <span class="dock-title">▲ Chat</span>
+          <span class="dock-toggle">▲ Chat</span>
           <span class="dock-chan">#{info.name}</span>
           <span class="dock-last muted">{last ? `${last.user}: ${last.text}` : 'No messages yet — say something'}</span>
           {totalUnread > 0 && <span class="dock-unread">{totalUnread}</span>}
@@ -82,9 +82,11 @@ export function ChatDock() {
   }
 
   return (
-    <div class="dock expanded" style={{ height: s.height }} role="region" aria-label="Chat">
+    <div class="dock expanded" style={{ height: `${s.height}px` }} role="region" aria-label="Chat">
       <Resizer />
       <div class="dock-head">
+        {/* Same label, same spot as the collapsed bar's, so the open/close control never moves. */}
+        <button class="dock-toggle" onClick={() => dock.toggle(false)} aria-expanded="true" title="Minimize chat">▼ Chat</button>
         <div class="dock-tabs" role="tablist">
           {['global', ...s.joined].map((id) => {
             const c = byId.get(id) ?? { id, name: id.replace('game-', 'Game '), state: 'archived' as const };
@@ -106,7 +108,6 @@ export function ChatDock() {
         </div>
         <div class="dock-tools">
           <Nick user={s.user} />
-          <button class="btn" onClick={() => dock.toggle(false)} title="Minimize chat">▼</button>
         </div>
       </div>
       <Messages msgs={active} me={s.user} info={info} />
@@ -134,12 +135,14 @@ function Messages({ msgs, me, info }: { msgs: ChatMessage[]; me: string; info: C
       </div>
       {msgs.map((m, i) => {
         const prev = msgs[i - 1];
-        const showTime = !prev || m.ts - prev.ts > 5 * 60_000;
+        // Every line carries its time; a date divider only appears when the day changes.
+        const newDay = prev ? dayKey(prev.ts) !== dayKey(m.ts) : dayKey(m.ts) !== dayKey(Date.now());
         return (
           <>
-            {showTime && <div class="dock-time muted">{new Date(m.ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</div>}
+            {newDay && <div class="dock-time muted">{new Date(m.ts).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</div>}
             <div class={`msg${m.user === me ? ' mine' : ''}`}>
-              <b class="msg-user">{m.user}</b> <span class="msg-text">{m.text}</span>
+              <time class="msg-time" dateTime={new Date(m.ts).toISOString()} title={fullTime.format(m.ts)}>{shortTime(m.ts)}</time>
+              <span><b class="msg-user">{m.user}</b> <span class="msg-text">{m.text}</span></span>
             </div>
           </>
         );
@@ -147,6 +150,12 @@ function Messages({ msgs, me, info }: { msgs: ChatMessage[]; me: string; info: C
     </div>
   );
 }
+
+const dayKey = (ts: number) => new Date(ts).toDateString();
+const fullTime = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' });
+const hm = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+/** "1:14" — the AM/PM marker is dropped to keep the column narrow; the tooltip has it. */
+const shortTime = (ts: number) => hm.formatToParts(ts).filter((p) => p.type !== 'dayPeriod').map((p) => p.value).join('').trim();
 
 function Composer({ channel, user, disabled, label }: { channel: string; user: string; disabled: boolean; label: string }) {
   const [text, setText] = useState('');

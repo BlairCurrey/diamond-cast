@@ -26,12 +26,14 @@ export function App() {
     <>
       {/* Deliberately minimal chrome: not the marketing site's nav/footer, just a way back. */}
       <header class="appbar">
-        <a class="appbar-back" href="/" title={`Back to the ${SITE_NAME} home page`}>&lsaquo; {SITE_NAME}.com</a>
-        <a class="appbar-brand" href={href.scores()}>◆ {SITE_NAME}</a>
-        <nav class="appbar-nav">
-          <a href={href.scores()} class={section === 'scores' ? 'on' : ''}>Scores</a>
-          <a href={href.standings()} class={section === 'standings' ? 'on' : ''}>Standings</a>
-        </nav>
+        <div class="appbar-left">
+          <a class="appbar-back" href="/" title={`Back to the ${SITE_NAME} home page`}>&lsaquo; {SITE_NAME}.com</a>
+          <a class="appbar-brand" href={href.scores()}><span class="appbar-mark">◆</span> {SITE_NAME}</a>
+          <nav class="appbar-nav">
+            <a href={href.scores()} class={section === 'scores' ? 'on' : ''}>Scores</a>
+            <a href={href.standings()} class={section === 'standings' ? 'on' : ''}>Standings</a>
+          </nav>
+        </div>
         <div class="appbar-right">
           {MOCK && <a class="demo-badge" href="?mock=0#/" title="Showing simulated games. Click to switch to live MLB data.">DEMO DATA</a>}
           <button class="appbar-theme" onClick={() => theme.toggle()}>{t === 'dark' ? '☀ Light' : '☾ Dark'}</button>

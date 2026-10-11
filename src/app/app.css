@@ -3,7 +3,19 @@
    so major layout changes mean editing this file, not the components.
    =========================================================================== */
 
-body.app { padding-bottom: calc(var(--dock-h, 30px) + 8px); }
+/* Page content column; the chat dock lines up with it. */
+/* --dock-shown: the dock's actual height (its set height, capped by --dock-max on small screens). */
+body.app {
+  --page-max: 1320px; --page-pad: 12px; --dock-fade: 18px; --dock-max: 100vh;
+  --dock-shown: min(var(--dock-h, 30px), var(--dock-max));
+  padding-bottom: calc(var(--dock-shown) + var(--dock-fade) + 8px);
+}
+/* Page content dissolves into the background just above the chat dock, so the two never touch.
+   The extra bottom padding above means the last row can always scroll clear of the fade. */
+body.app::after {
+  content: ""; position: fixed; left: 0; right: 0; bottom: var(--dock-shown); height: var(--dock-fade);
+  background: linear-gradient(to bottom, transparent, var(--bg) 80%); pointer-events: none; z-index: 29; /* short and hard */
+}
 
 /* ------------------------------ app bar ---------------------------------- */
 .appbar {
@@ -12,20 +24,23 @@ body.app { padding-bottom: calc(var(--dock-h, 30px) + 8px); }
   height: 36px; padding: 0 12px;
   background: linear-gradient(var(--chrome), var(--chrome-2));
   color: var(--chrome-text);
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid var(--chrome-border);
 }
+/* Mixed font sizes (back link 12px, brand 14px, nav 12px) share one baseline. */
+.appbar-left { display: flex; align-items: baseline; gap: inherit; }
 .appbar a, .appbar a:visited { color: var(--chrome-text); }
 .appbar-back { color: var(--chrome-muted) !important; font-size: 12px; }
+.appbar-mark { color: var(--brand); }
 .appbar-brand { font-weight: bold; letter-spacing: .02em; font-size: 14px; }
 .appbar-nav { display: flex; gap: 2px; }
 .appbar-nav a { padding: 4px 10px; border-radius: 3px; font-size: 12px; }
-.appbar-nav a.on { background: rgba(255,255,255,.14); }
-.appbar-nav a:hover { text-decoration: none; background: rgba(255,255,255,.08); }
+.appbar-nav a.on { background: color-mix(in srgb, var(--chrome-text) 12%, transparent); }
+.appbar-nav a:hover { text-decoration: none; background: color-mix(in srgb, var(--chrome-text) 7%, transparent); }
 .appbar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-.appbar-theme { background: none; border: 1px solid rgba(255,255,255,.25); border-radius: 3px; color: var(--chrome-text); padding: 2px 8px; cursor: pointer; font-size: 11px; }
+.appbar-theme { background: none; border: 1px solid var(--chrome-border); border-radius: 3px; color: var(--chrome-text); padding: 2px 8px; cursor: pointer; font-size: 11px; }
 .demo-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 2px; background: #b06d00; color: #fff !important; letter-spacing: .05em; }
 
-.appmain { max-width: 1320px; margin: 0 auto; padding: 10px 12px; }
+.appmain { max-width: var(--page-max); margin: 0 auto; padding: 10px var(--page-pad); }
 .page-title { font-size: 18px; margin: 4px 0 10px; }
 
 /* ------------------------------ boxes ------------------------------------ */
@@ -88,7 +103,13 @@ table { border-collapse: collapse; }
 .sb-summary { font-size: 12px; margin-bottom: 8px; }
 
 .sb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 10px; }
-.sb-card { background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; }
+.sb-card { position: relative; background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; }
+/* The whole card opens the game: the status bar's link stretches over the card,
+   and the links inside (teams, players, tabs) sit above it and go to their own pages. */
+.sb-status::after { content: ""; position: absolute; inset: 0; }
+.sb-card a:not(.sb-status) { position: relative; z-index: 1; }
+.sb-card:hover { border-color: var(--muted); }
+.sb-card:hover .sb-status { background: var(--bar-2); }
 .sb-card.live, .sb-card.delayed { border-left: 3px solid var(--live); }
 .sb-status { display: flex; justify-content: space-between; padding: 4px 8px; background: linear-gradient(var(--bar-1), var(--bar-2)); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: bold; color: var(--text) !important; text-transform: uppercase; letter-spacing: .03em; }
 .sb-status:hover { text-decoration: none; background: var(--bar-2); }
@@ -98,6 +119,7 @@ table { border-collapse: collapse; }
 .sb-table th, .sb-table td { padding: 3px 4px; text-align: center; }
 .sb-table thead th { font-size: 10px; color: var(--muted); font-weight: normal; }
 .sb-table .sb-team { text-align: left; padding-left: 8px; white-space: nowrap; width: 100%; font-weight: normal; }
+.sb-teamcell { display: flex; align-items: center; }
 .sb-team a { display: inline-flex; gap: 6px; align-items: center; color: var(--text) !important; }
 .sb-abbr { font-weight: bold; width: 32px; }
 .sb-club { color: var(--muted); }
@@ -105,7 +127,7 @@ table { border-collapse: collapse; }
 .sb-table td.inn { width: 16px; color: var(--muted); }
 .sb-table .inn.cur { background: var(--highlight); color: var(--text); }
 .sb-table .rhe { width: 22px; font-weight: bold; }
-.sb-table .rhe.r { border-left: 1px solid var(--border-soft); font-size: 14px; }
+.sb-table .rhe.r { border-left: 1px solid var(--border-soft); }
 .sb-table tr.lose td, .sb-table tr.lose .sb-abbr { color: var(--muted); }
 .sb-table tr.win .rhe.r { color: var(--text); }
 .sb-table .sb-prob { text-align: right; padding-right: 8px; white-space: nowrap; }
@@ -137,6 +159,7 @@ table { border-collapse: collapse; }
 .linescore th, .linescore td { padding: 3px 6px; text-align: center; border-left: 1px solid var(--border-soft); min-width: 22px; }
 .linescore thead th { background: linear-gradient(var(--bar-1), var(--bar-2)); font-size: 11px; color: var(--muted); border-bottom: 1px solid var(--border); }
 .linescore .ls-team { text-align: left; border-left: 0; white-space: nowrap; width: 1%; padding-right: 14px; }
+.ls-teamcell { display: flex; align-items: center; gap: 6px; }
 .linescore .ls-team a { color: var(--text) !important; font-weight: bold; display: inline-flex; gap: 5px; align-items: center; }
 .linescore .cur { background: var(--highlight); }
 .linescore .rhe { font-weight: bold; background: var(--panel-alt); }
@@ -147,10 +170,10 @@ table { border-collapse: collapse; }
 
 .tabrow { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
 .tabs { display: flex; gap: 2px; }
-.tab { padding: 5px 14px; border: 1px solid var(--border); border-bottom: 0; background: linear-gradient(var(--bar-1), var(--bar-2)); color: var(--text) !important; font-size: 12px; font-weight: bold; position: relative; top: 1px; }
+.tab { white-space: nowrap; padding: 5px 14px; border: 1px solid var(--border); border-bottom: 0; background: linear-gradient(var(--bar-1), var(--bar-2)); color: var(--text) !important; font-size: 12px; font-weight: bold; position: relative; top: 1px; }
 .tab:hover { text-decoration: none; background: var(--bar-2); }
 .tab.on { background: var(--panel); border-bottom: 1px solid var(--panel); }
-.chat-btn { margin-bottom: 4px; }
+.chat-btn { margin-bottom: 4px; white-space: nowrap; }
 
 /* ------------------------------ gamecast --------------------------------- */
 .gc-cols { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 10px; align-items: start; }
@@ -174,7 +197,7 @@ table { border-collapse: collapse; }
 
 .now-grid { display: grid; grid-template-columns: 170px 230px minmax(0, 1fr); gap: 12px; padding: 10px 12px 12px; align-items: start; }
 .now-inning { display: flex; align-items: center; gap: 6px; font-size: 14px; margin-bottom: 4px; }
-.diamond { position: relative; width: 160px; height: 112px; }
+.diamond { position: relative; width: 160px; height: 128px; padding-top: 16px; } /* top strip holds the 2B runner's name */
 .diamond svg { display: block; }
 .diamond .infield { fill: var(--panel-alt); stroke: var(--border); }
 .diamond .base { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
@@ -182,9 +205,9 @@ table { border-collapse: collapse; }
 .diamond .plate { fill: var(--panel); stroke: var(--muted); }
 .runner { position: absolute; font-size: 11px; font-weight: bold; white-space: nowrap; background: var(--panel); padding: 0 2px; }
 .runner:empty { display: none; }
-.runner.r2 { top: -4px; left: 50%; transform: translateX(-50%) translateY(-100%); }
-.runner.r1 { top: 66px; right: -8px; }
-.runner.r3 { top: 66px; left: -8px; }
+.runner.r2 { top: 0; left: 50%; transform: translateX(-50%); line-height: 15px; }
+.runner.r1 { top: 82px; right: -8px; }
+.runner.r3 { top: 82px; left: -8px; }
 .count-lights { margin-top: 6px; }
 .lights { display: flex; align-items: center; gap: 4px; height: 16px; }
 .lights-lbl { width: 14px; font-size: 11px; font-weight: bold; color: var(--muted); }
@@ -321,30 +344,49 @@ table { border-collapse: collapse; }
 .pos-diff { color: var(--ball); } .neg-diff { color: var(--strike); }
 
 /* ------------------------------ chat dock -------------------------------- */
-.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--panel); border-top: 1px solid var(--border); box-shadow: 0 -2px 6px rgba(0,0,0,.08); font-size: 12px; }
+.dock {
+  position: fixed; bottom: 0; z-index: 30; font-size: 12px;
+  /* The page content's width plus a small overhang on each side, so the dock reads as a layer
+     above the content rather than one more box in the column. Centered like .appmain. */
+  --dock-overhang: 8px;
+  left: calc(var(--page-pad) - var(--dock-overhang)); right: calc(var(--page-pad) - var(--dock-overhang));
+  max-width: calc(var(--page-max) - 2 * var(--page-pad) + 2 * var(--dock-overhang)); margin: 0 auto;
+  background: var(--panel); border: 1px solid var(--border); border-bottom: 0; border-radius: 6px 6px 0 0;
+  box-shadow: 0 -4px 16px rgba(0,0,0,.14); overflow: hidden;
+}
+/* Dark shadows vanish on a near-black page: deeper shadow plus a lighter edge instead. */
+:root[data-theme="dark"] .dock { border-color: #4a505a; box-shadow: 0 -8px 24px rgba(0,0,0,.6); }
 .dock.collapsed { height: 30px; }
 .dock-bar { width: 100%; height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; background: linear-gradient(var(--bar-1), var(--bar-2)); cursor: pointer; text-align: left; }
-.dock-title { font-weight: bold; }
+/* The open/close control: identical in the collapsed bar and the open header, text starting 12px in. */
+.dock-toggle { flex: none; font-weight: bold; font-size: 12px; white-space: nowrap; }
+.dock-head .dock-toggle { border: 0; background: none; cursor: pointer; padding: 4px; margin-right: 4px; border-radius: 3px; color: var(--text); }
+.dock-head .dock-toggle:hover { background: var(--bar-2); }
 .dock-chan { font-weight: bold; color: var(--link); }
 .dock-last { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .dock-unread { display: inline-block; min-width: 16px; padding: 0 4px; border-radius: 8px; background: var(--live); color: #fff; font-size: 10px; font-weight: bold; text-align: center; line-height: 16px; margin-left: 4px; }
-.dock.expanded { display: flex; flex-direction: column; }
-.dock-resize { position: absolute; top: -4px; left: 0; right: 0; height: 8px; cursor: ns-resize; }
-.dock-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; background: linear-gradient(var(--bar-1), var(--bar-2)); border-bottom: 1px solid var(--border); min-height: 30px; }
-.dock-tabs { display: flex; gap: 2px; align-items: flex-end; overflow-x: auto; align-self: stretch; padding-top: 4px; }
-.dock-tab { display: inline-flex; align-items: center; border: 1px solid var(--border); border-bottom: 0; background: var(--bar-2); white-space: nowrap; position: relative; top: 1px; }
+.dock.expanded { display: flex; flex-direction: column; max-height: var(--dock-max); }
+.dock-resize { position: absolute; top: 0; left: 0; right: 0; height: 6px; cursor: ns-resize; z-index: 2; }
+.dock-head { display: flex; align-items: center; gap: 8px; padding: 0 8px; background: linear-gradient(var(--bar-1), var(--bar-2)); border-bottom: 1px solid var(--border); min-height: 30px; }
+/* Tabs scroll sideways when there are many (trackpad/shift-wheel), with no visible
+   scrollbar. The strip hangs 1px over the head's bottom border so the active tab's
+   background covers it, without anything spilling out and triggering a scrollbar. */
+.dock-tabs { display: flex; gap: 2px; align-items: flex-end; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; align-self: stretch; padding-top: 4px; margin-bottom: -1px; }
+.dock-tabs::-webkit-scrollbar { display: none; }
+.dock-tab { display: inline-flex; align-items: center; border: 1px solid var(--border); border-bottom: 0; background: var(--bar-2); white-space: nowrap; flex: none; }
 .dock-tab.on { background: var(--panel); }
 .dock-tab.archived { opacity: .6; }
 .dock-tab button { border: 0; background: none; cursor: pointer; padding: 4px 8px; display: inline-flex; align-items: center; gap: 3px; font-weight: bold; font-size: 11px; }
 .dock-tab .dock-x { padding: 4px 6px 4px 0; color: var(--muted); font-weight: normal; }
-.dock-join { font: inherit; font-size: 11px; margin: 0 0 3px 6px; background: var(--panel); color: var(--text); border: 1px solid var(--border); }
-.dock-tools { display: flex; gap: 6px; align-items: center; }
+.dock-join { font: inherit; font-size: 11px; margin: 0 0 3px 6px; flex: none; background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+.dock-tools { display: flex; gap: 6px; align-items: center; margin-left: auto; }
 .dock-nick { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 11px; }
 .dock-nick-in { font: inherit; font-size: 11px; width: 120px; }
-.dock-msgs { flex: 1; overflow-y: auto; padding: 6px 12px; }
+.dock-msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 12px; }
 .dock-intro { font-size: 11px; padding-bottom: 6px; }
 .dock-time { text-align: center; font-size: 10px; margin: 6px 0 2px; }
-.msg { padding: 1px 0; line-height: 1.45; }
+.msg { display: grid; grid-template-columns: 2.6em 1fr; gap: 8px; align-items: baseline; padding: 1px 0; line-height: 1.45; }
+.msg-time { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; text-align: right; cursor: default; }
 .msg-user { color: var(--link); }
 .msg.mine .msg-user { color: var(--score); }
 .dock-input { display: flex; gap: 6px; padding: 6px 8px; border-top: 1px solid var(--border-soft); align-items: center; }
@@ -366,7 +408,13 @@ table { border-collapse: collapse; }
   .appbar-back { display: none; }
 }
 @media (max-width: 560px) {
-  .appmain { padding: 8px 6px; }
+  body.app { --page-pad: 6px; --dock-max: 30vh; } /* open chat never takes more than 30% of a phone screen */
+  .tab { padding: 5px 9px; }
+  .ls-teamcell .muted { display: none; } /* records are in the game header just above */
+  .linescore th, .linescore td { padding: 3px 3px; min-width: 18px; }
+  .linescore .ls-team { padding-right: 6px; }
+  .dock { --dock-overhang: 3px; } /* keep a sliver of gap from the screen edge */
+  .appmain { padding-top: 8px; padding-bottom: 8px; }
   .now-grid { grid-template-columns: 164px minmax(0, 1fr); gap: 8px; padding: 8px; }
   .now-zone .zone { width: 100%; height: auto; }
   .now-ab { grid-column: 1 / -1; width: 100%; }

@@ -17,7 +17,7 @@ export function TeamLogo({ id, size = 20, abbr }: { id: number; size?: number; a
   const label = abbr ?? t?.abbr ?? '';
   if (i >= urls.length) {
     return (
-      <span class="badge" style={{ background: t?.color ?? '#777', minWidth: size, height: size, padding: '0 2px', fontSize: Math.max(8, size * 0.42) }} aria-hidden="true">
+      <span class="badge" style={{ background: t?.color ?? '#777', minWidth: `${size}px`, height: `${size}px`, padding: '0 2px', fontSize: `${Math.max(8, size * 0.42)}px` }} aria-hidden="true">
         {label}
       </span>
     );
@@ -53,7 +53,7 @@ export function PlayerLink({ p, full = false }: { p?: { id: number; name: string
 
 export function Headshot({ id, size = 64 }: { id: number; size?: number }) {
   const [ok, setOk] = useState(true);
-  if (!HEADSHOTS_ENABLED || !ok) return <div class="headshot ph" style={{ width: size, height: size * 1.2 }} />;
+  if (!HEADSHOTS_ENABLED || !ok) return <div class="headshot ph" style={{ width: `${size}px`, height: `${size * 1.2}px` }} />;
   return <img class="headshot" src={headshot(id, size * 2)} width={size} height={Math.round(size * 1.2)} alt="" onError={() => setOk(false)} />;
 }
 
