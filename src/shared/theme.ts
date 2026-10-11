@@ -4,7 +4,7 @@
 // HTML <head> applies it before first paint so there is no flash.
 
 export type ThemePref = 'light' | 'dark' | 'auto';
-const KEY = 'bp.theme';
+const KEY = 'dc.theme';
 
 export function getPref(): ThemePref {
   try {

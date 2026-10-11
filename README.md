@@ -1,4 +1,4 @@
-# Basepath
+# Diamond Cast
 
 A static MLB site: a marketing home page at `/` and a single-page app at `/app/`
 (scoreboard, live gamecast, box scores, play-by-play, player/team pages, standings,

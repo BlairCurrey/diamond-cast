@@ -33,14 +33,14 @@ export interface ChatTransport {
  */
 export class LocalTransport implements ChatTransport {
   readonly label: string = 'Local preview — messages stay in this browser';
-  private bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('bp-chat') : null;
+  private bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('dc-chat') : null;
   private subs = new Map<string, Set<(m: ChatMessage[]) => void>>();
 
   constructor() {
     this.bc?.addEventListener('message', (e) => this.deliver(e.data as ChatMessage));
   }
 
-  private key(ch: string) { return `bp.chat.${ch}`; }
+  private key(ch: string) { return `dc.chat.${ch}`; }
 
   protected history(ch: string): ChatMessage[] {
     try { return JSON.parse(localStorage.getItem(this.key(ch)) || '[]'); } catch { return []; }

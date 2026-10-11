@@ -30,7 +30,7 @@ export function ChatDock() {
   const watched = Array.from(new Set(['global', ...s.joined, s.channel]));
   const [msgs, setMsgs] = useState<Record<string, ChatMessage[]>>({});
   const [lastRead, setLastRead] = useState<Record<string, number>>(() => {
-    try { return JSON.parse(localStorage.getItem('bp.chat.read') || '{}'); } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem('dc.chat.read') || '{}'); } catch { return {}; }
   });
   useEffect(() => {
     const tr = getTransport();
@@ -53,7 +53,7 @@ export function ChatDock() {
     if ((lastRead[s.channel] ?? 0) < ts) {
       const n = { ...lastRead, [s.channel]: ts };
       setLastRead(n);
-      try { localStorage.setItem('bp.chat.read', JSON.stringify(n)); } catch { /* ignore */ }
+      try { localStorage.setItem('dc.chat.read', JSON.stringify(n)); } catch { /* ignore */ }
     }
   }, [s.expanded, s.channel, active.length]);
 

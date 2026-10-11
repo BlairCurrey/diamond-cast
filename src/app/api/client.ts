@@ -9,8 +9,8 @@ const cache = new Map<string, Entry>();
 export const MOCK: boolean = (() => {
   try {
     const q = new URLSearchParams(location.search);
-    if (q.has('mock')) sessionStorage.setItem('bp.mock', q.get('mock') === '0' ? '0' : '1');
-    return sessionStorage.getItem('bp.mock') === '1';
+    if (q.has('mock')) sessionStorage.setItem('dc.mock', q.get('mock') === '0' ? '0' : '1');
+    return sessionStorage.getItem('dc.mock') === '1';
   } catch { return false; }
 })();
 

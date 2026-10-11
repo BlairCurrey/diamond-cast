@@ -11,7 +11,7 @@ export interface DockState {
   user: string;
 }
 
-const KEY = 'bp.chatdock';
+const KEY = 'dc.chatdock';
 
 function load(): DockState {
   // First visit: open on desktop so chat is noticed; collapsed on phones, where it would cover most of the screen.

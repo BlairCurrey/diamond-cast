@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scoreboard — Basepath</title>
+  <title>Scoreboard — Diamond Cast</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script>
     (function () {
       try {
-        var p = localStorage.getItem('bp.theme') || 'auto';
+        var p = localStorage.getItem('dc.theme') || 'auto';
         var t = p === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : p;
         document.documentElement.dataset.theme = t;
       } catch (e) {}

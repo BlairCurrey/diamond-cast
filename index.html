@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Basepath — Every pitch, every box score</title>
+  <title>Diamond Cast — Every pitch, every box score</title>
   <meta name="description" content="Free MLB scoreboard, pitch-by-pitch gamecast, box scores and player stats. Fast, dense, no clutter." />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <script>
     // Apply saved theme before paint (mirrors src/shared/theme.ts)
     (function () {
       try {
-        var p = localStorage.getItem('bp.theme') || 'auto';
+        var p = localStorage.getItem('dc.theme') || 'auto';
         var t = p === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : p;
         document.documentElement.dataset.theme = t;
       } catch (e) {}
@@ -20,7 +20,7 @@
 <body class="site">
   <div class="site-top">
     <div class="wrap site-top-inner">
-      <a class="site-logo" href="/"><span class="site-logo-mark">◆</span> Basepath</a>
+      <a class="site-logo" href="/"><span class="site-logo-mark">◆</span> Diamond Cast</a>
       <nav class="site-nav">
         <a href="#features">Features</a>
         <a href="#gamecast">Gamecast</a>
@@ -44,7 +44,7 @@
       <div class="hero-copy">
         <h1>Follow every pitch without the noise.</h1>
         <p class="lede">
-          Basepath is a fast, no-nonsense MLB scoreboard. Live games read like a
+          Diamond Cast is a fast, no-nonsense MLB scoreboard. Live games read like a
           broadcaster's scorebook: the count, the runners, every pitch with its speed
           and location, and a plain-English log of what just happened.
         </p>
@@ -150,7 +150,7 @@
         <dt>Where does the data come from?</dt>
         <dd>MLB's public Stats API, the same feed that powers MLB's own Gameday. Live games update every few seconds.</dd>
         <dt>Is there video?</dt>
-        <dd>No. Basepath is built for following along when you can't watch: at work, on the train, or with the game on the radio.</dd>
+        <dd>No. Diamond Cast is built for following along when you can't watch: at work, on the train, or with the game on the radio.</dd>
         <dt>Does it work on my phone?</dt>
         <dd>Yes. The layout collapses to a single column on small screens.</dd>
       </dl>
@@ -161,7 +161,7 @@
     <div class="wrap">
       <a href="/app/">Scoreboard</a> &middot; <a href="/app/#/standings">Standings</a> &middot; <a href="#faq">FAQ</a>
       <p class="muted">
-        Basepath is an independent fan project and is not affiliated with or endorsed by Major League Baseball.
+        Diamond Cast is an independent fan project and is not affiliated with or endorsed by Major League Baseball.
         Game data, team marks and player photos &copy; MLB Advanced Media, L.P., used for personal, non-commercial purposes.
       </p>
     </div>
