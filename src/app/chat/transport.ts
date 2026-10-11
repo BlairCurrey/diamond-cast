@@ -32,7 +32,7 @@ export interface ChatTransport {
  * build and test the UI; it is NOT multi-user.
  */
 export class LocalTransport implements ChatTransport {
-  readonly label = 'Local preview — messages stay in this browser';
+  readonly label: string = 'Local preview — messages stay in this browser';
   private bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('bp-chat') : null;
   private subs = new Map<string, Set<(m: ChatMessage[]) => void>>();
 
@@ -42,11 +42,11 @@ export class LocalTransport implements ChatTransport {
 
   private key(ch: string) { return `bp.chat.${ch}`; }
 
-  private history(ch: string): ChatMessage[] {
+  protected history(ch: string): ChatMessage[] {
     try { return JSON.parse(localStorage.getItem(this.key(ch)) || '[]'); } catch { return []; }
   }
 
-  private deliver(m: ChatMessage) {
+  protected deliver(m: ChatMessage) {
     this.subs.get(m.channel)?.forEach((cb) => cb([m]));
   }
 
