@@ -6,7 +6,9 @@ import { href } from '../router';
 import { TeamLogo } from '../components/common';
 import { dock, useDock } from './store';
 import { channelsFrom, GLOBAL, type ChannelInfo } from './channels';
-import { getTransport, type ChatMessage } from './transport';
+import { getTransport, MAX_MESSAGE_LENGTH, type ChatIdentity, type ChatMessage, type ChatStatus, type SendError } from './transport';
+
+type ChannelSendError = SendError & { channel: string; seq: number };
 
 /**
  * Chat docked to the bottom of the app. It lives outside the router, so moving
@@ -26,24 +28,46 @@ export function ChatDock() {
     if (t.data && y.data) dock.prune(new Set(available.map((c) => c.id)));
   }, [all]);
 
+  const [me, setMe] = useState<ChatIdentity | null>(() => getTransport().me);
+  useEffect(() => getTransport().onIdentity(setMe), []);
+
   // Messages for global + joined channels (for unread counts), plus the active one.
   const watched = Array.from(new Set(['global', ...s.joined, s.channel]));
   const [msgs, setMsgs] = useState<Record<string, ChatMessage[]>>({});
+  const [status, setStatus] = useState<Record<string, ChatStatus>>({});
+  const [sendError, setSendError] = useState<ChannelSendError | null>(null);
   const [lastRead, setLastRead] = useState<Record<string, number>>(() => {
     try { return JSON.parse(localStorage.getItem('dc.chat.read') || '{}'); } catch { return {}; }
   });
+  // Subscribe to channels as they're added and unsubscribe as they're removed, so changing
+  // tabs never drops and reopens the connections of channels still being watched.
+  const subs = useRef(new Map<string, () => void>());
+  const errorSeq = useRef(0);
   useEffect(() => {
     const tr = getTransport();
-    const offs = watched.map((ch) => tr.subscribe(ch, (incoming) => {
-      setMsgs((m) => {
-        const cur = m[ch] ?? [];
-        const ids = new Set(cur.map((x) => x.id));
-        const add = incoming.filter((x) => !ids.has(x.id));
-        return add.length ? { ...m, [ch]: [...cur, ...add].slice(-300) } : m;
-      });
-    }));
-    return () => offs.forEach((f) => f());
+    for (const [ch, off] of subs.current) {
+      if (watched.includes(ch)) continue;
+      off();
+      subs.current.delete(ch);
+      // Forget everything about the channel: a later re-subscribe starts from "connecting".
+      setMsgs(({ [ch]: _, ...rest }) => rest);
+      setStatus(({ [ch]: _, ...rest }) => rest);
+    }
+    for (const ch of watched) {
+      if (subs.current.has(ch)) continue;
+      subs.current.set(ch, tr.subscribe(ch, {
+        reset: (list) => setMsgs((m) => ({ ...m, [ch]: list.slice(-300) })),
+        message: (x) => setMsgs((m) => {
+          const cur = m[ch] ?? [];
+          return cur.some((y) => y.id === x.id) ? m : { ...m, [ch]: [...cur, x].slice(-300) };
+        }),
+        deleted: (id) => setMsgs((m) => (m[ch] ? { ...m, [ch]: m[ch].filter((y) => y.id !== id) } : m)),
+        status: (st) => setStatus((v) => ({ ...v, [ch]: st })),
+        error: (e) => setSendError({ ...e, channel: ch, seq: ++errorSeq.current }),
+      }));
+    }
   }, [watched.join('|')]);
+  useEffect(() => () => { subs.current.forEach((off) => off()); subs.current.clear(); }, []);
 
   // Reading the active channel while expanded marks it read.
   const active = msgs[s.channel] ?? [];
@@ -57,10 +81,14 @@ export function ChatDock() {
     }
   }, [s.expanded, s.channel, active.length]);
 
-  const unread = (ch: string) => (msgs[ch] ?? []).filter((m) => m.ts > (lastRead[ch] ?? 0) && m.user !== s.user).length;
+  const unread = (ch: string) => (msgs[ch] ?? []).filter((m) => m.ts > (lastRead[ch] ?? 0) && m.uid !== me?.uid).length;
   const totalUnread = watched.reduce((a, ch) => a + unread(ch), 0);
 
   // Reserve room at the bottom of the page so the dock never covers content.
+  useEffect(() => {
+    document.body.classList.add('has-dock');
+    return () => { document.body.classList.remove('has-dock'); };
+  }, []);
   useEffect(() => {
     document.documentElement.style.setProperty('--dock-h', s.expanded ? `${s.height}px` : '30px');
   }, [s.expanded, s.height]);
@@ -107,16 +135,19 @@ export function ChatDock() {
           <JoinMenu channels={available.filter((c) => !s.joined.includes(c.id))} />
         </div>
         <div class="dock-tools">
-          <Nick user={s.user} />
+          {me && <span class="dock-me muted" title="Your chat name, assigned by the chat server">{me.name}</span>}
         </div>
       </div>
-      <Messages msgs={active} me={s.user} info={info} />
-      <Composer channel={s.channel} user={s.user} disabled={info.state === 'archived'} label={getTransport().label} />
+      <Messages msgs={active} me={me?.uid} info={info} />
+      <Composer
+        channel={s.channel} me={me} msgs={active} archived={info.state === 'archived'}
+        status={status[s.channel] ?? 'connecting'} error={sendError} label={getTransport().label}
+      />
     </div>
   );
 }
 
-function Messages({ msgs, me, info }: { msgs: ChatMessage[]; me: string; info: ChannelInfo }) {
+function Messages({ msgs, me, info }: { msgs: ChatMessage[]; me?: string; info: ChannelInfo }) {
   const ref = useRef<HTMLDivElement>(null);
   const stick = useRef(true);
   useEffect(() => {
@@ -140,7 +171,7 @@ function Messages({ msgs, me, info }: { msgs: ChatMessage[]; me: string; info: C
         return (
           <>
             {newDay && <div class="dock-time muted">{new Date(m.ts).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</div>}
-            <div class={`msg${m.user === me ? ' mine' : ''}`}>
+            <div class={`msg${me && m.uid === me ? ' mine' : ''}`}>
               <time class="msg-time" dateTime={new Date(m.ts).toISOString()} title={fullTime.format(m.ts)}>{shortTime(m.ts)}</time>
               <span><b class="msg-user">{m.user}</b> <span class="msg-text">{m.text}</span></span>
             </div>
@@ -157,28 +188,75 @@ const hm = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digi
 /** "1:14" — the AM/PM marker is dropped to keep the column narrow; the tooltip has it. */
 const shortTime = (ts: number) => hm.formatToParts(ts).filter((p) => p.type !== 'dayPeriod').map((p) => p.value).join('').trim();
 
-function Composer({ channel, user, disabled, label }: { channel: string; user: string; disabled: boolean; label: string }) {
+const ERROR_TEXT: Record<SendError['code'], string> = {
+  rate_limited: 'Slow down: too many messages. Try again in a moment.',
+  too_long: `Too long: ${MAX_MESSAGE_LENGTH} characters max.`,
+  room_limit: "This room can't take new messages right now.",
+  invalid: "That message couldn't be sent.",
+};
+
+const NOT_CONNECTED_TEXT = 'Not connected: message not sent. Try again once chat reconnects.';
+
+const STATUS_TEXT: Partial<Record<ChatStatus, string>> = { connecting: 'Connecting…', closed: 'Reconnecting…', banned: 'Banned' };
+
+function Composer({ channel, me, msgs, archived, status, error, label }: {
+  channel: string; me: ChatIdentity | null; msgs: ChatMessage[]; archived: boolean;
+  status: ChatStatus; error: ChannelSendError | null; label: string;
+}) {
   const [text, setText] = useState('');
-  const send = async (e: Event) => {
+  const [notice, setNotice] = useState<string | null>(null);
+  // Sends awaiting their echo, by clientId, so a rejected one can be put back in the box.
+  const pending = useRef(new Map<string, string>());
+  const banned = status === 'banned';
+  const disabled = archived || banned;
+
+  useEffect(() => {
+    for (const m of msgs) if (m.clientId) pending.current.delete(m.clientId);
+  }, [msgs.length]);
+
+  useEffect(() => {
+    if (!error || error.channel !== channel) return;
+    const lost = error.clientId ? pending.current.get(error.clientId) : undefined;
+    if (error.clientId) pending.current.delete(error.clientId);
+    if (lost !== undefined) setText((cur) => (cur.trim() ? cur : lost)); // never silently drop the user's words
+    // While disconnected, a "rate_limited" is the client's send queue overflowing, not the server's limit.
+    setNotice(error.code === 'rate_limited' && status !== 'open' ? NOT_CONNECTED_TEXT : ERROR_TEXT[error.code]);
+    const t = setTimeout(() => setNotice(null), 5000);
+    return () => clearTimeout(t);
+  }, [error?.seq]);
+
+  const send = (e: Event) => {
     e.preventDefault();
     const t = text.trim();
     if (!t || disabled) return;
+    if (t.length > MAX_MESSAGE_LENGTH) { setNotice(ERROR_TEXT.too_long); return; }
+    pending.current.set(getTransport().send(channel, t), t);
     setText('');
-    await getTransport().send(channel, user, t.slice(0, 500));
+    setNotice(null);
   };
+
+  const placeholder = banned ? "You've been banned from chat"
+    : archived ? 'This room is closed'
+    : me ? `Message as ${me.name}` : 'Message…';
+  const footer = STATUS_TEXT[status] ?? label.split(' — ')[0];
   return (
-    <form class="dock-input" onSubmit={send}>
-      <input
-        value={text}
-        onInput={(e) => setText((e.target as HTMLInputElement).value)}
-        placeholder={disabled ? 'This room is closed' : `Message as ${user}`}
-        maxLength={500}
-        disabled={disabled}
-        aria-label="Chat message"
-      />
-      <button class="btn primary" disabled={disabled || !text.trim()}>Send</button>
-      <span class="dock-transport muted" title={label}>{label.split(' — ')[0]}</span>
-    </form>
+    <>
+      {(banned || notice) && (
+        <div class="dock-notice" role="status">{banned ? 'A moderator has banned you from chat, so you can read but not post.' : notice}</div>
+      )}
+      <form class="dock-input" onSubmit={send}>
+        <input
+          value={text}
+          onInput={(e) => setText((e.target as HTMLInputElement).value)}
+          placeholder={placeholder}
+          maxLength={MAX_MESSAGE_LENGTH}
+          disabled={disabled}
+          aria-label="Chat message"
+        />
+        <button class="btn primary" disabled={disabled || !text.trim()}>Send</button>
+        <span class={`dock-transport muted${status === 'open' ? '' : ' warn'}`} title={label}>{footer}</span>
+      </form>
+    </>
   );
 }
 
@@ -189,16 +267,6 @@ function JoinMenu({ channels }: { channels: ChannelInfo[] }) {
       <option value="">+ Game room…</option>
       {channels.map((c) => <option value={c.id}>{c.name}{c.game?.kind === 'live' ? ' (live)' : c.state === 'postgame' ? ' (final)' : ''}</option>)}
     </select>
-  );
-}
-
-function Nick({ user }: { user: string }) {
-  const [editing, setEditing] = useState(false);
-  if (!editing) return <button class="dock-nick" onClick={() => setEditing(true)} title="Change your display name">{user} ✎</button>;
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); const v = (e.currentTarget.elements.namedItem('n') as HTMLInputElement).value; dock.setUser(v); setEditing(false); }}>
-      <input name="n" class="dock-nick-in" defaultValue={user} maxLength={24} autoFocus onBlur={(e) => { dock.setUser((e.target as HTMLInputElement).value); setEditing(false); }} />
-    </form>
   );
 }
 

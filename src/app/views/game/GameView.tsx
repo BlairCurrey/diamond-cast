@@ -8,6 +8,7 @@ import { href } from '../../router';
 import { ErrorBox, Loading, Tabs, TeamLogo } from '../../components/common';
 import { Linescore } from '../../components/Linescore';
 import { dock } from '../../chat/store';
+import { chatEnabled } from '../../chat/transport';
 import { Gamecast } from './Gamecast';
 import { BoxScore } from './BoxScore';
 import { Plays } from './Plays';
@@ -53,7 +54,7 @@ export function GameView({ pk, tab }: { pk: number; tab?: string }) {
       )}
       <div class="tabrow">
         <Tabs items={tabs.map((t) => ({ ...t, href: href.game(pk, t.key) }))} active={active} />
-        <button class="btn chat-btn" onClick={() => dock.openGame(pk)} title="Open this game's chat room in the dock">💬 Game chat</button>
+        {chatEnabled() && <button class="btn chat-btn" onClick={() => dock.openGame(pk)} title="Open this game's chat room in the dock">💬 Game chat</button>}
       </div>
       {active === 'gamecast' && <Gamecast feed={feed} version={version} replay={isReplay ? replay : undefined} />}
       {active === 'box' && <BoxScore feed={feed} version={version} />}

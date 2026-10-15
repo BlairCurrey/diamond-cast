@@ -1,72 +1,66 @@
 // ---------------------------------------------------------------------------
 // Chat transport: the seam between the chat UI and whatever backend runs it.
 //
-// The UI only talks to this interface. Swap LocalTransport for a real one
-// (Supabase Realtime, Firebase, Ably, Pusher, PartyKit, a WebSocket server…)
-// by implementing the same three methods and calling setTransport() at startup.
-// Moderation, rate limiting, identity and retention belong to that backend.
+// The UI only talks to this interface. The real backend is hobbychat
+// (HobbyChatTransport, used when VITE_CHAT_SERVER is set); MockChatTransport drives
+// the ?mock demo. With neither there is no chat at all: identity always comes from
+// the backend, never from the browser. The shape follows
+// hobbychat's model: anonymous server-assigned identity, history that is
+// replaced on every (re)join, moderator deletions, and send errors matched to
+// the failed send by clientId. Moderation, rate limiting, identity and
+// retention belong to the backend.
 // ---------------------------------------------------------------------------
 
 export interface ChatMessage {
   id: string;
   channel: string;     // "global" | "game-<gamePk>"
-  user: string;        // display name
-  text: string;
+  uid: string;         // stable sender identity: compare this, never the display name
+  user: string;        // display name (not unique)
+  text: string;        // plain text: render as text, never HTML
   ts: number;          // ms epoch
+  clientId?: string;   // set on the echo of your own send
+}
+
+/** The current user, as the backend knows them. Names aren't unique; uid is. */
+export interface ChatIdentity { uid: string; name: string }
+
+export type ChatStatus = 'connecting' | 'open' | 'closed' | 'banned';
+
+export type SendErrorCode = 'rate_limited' | 'too_long' | 'room_limit' | 'invalid';
+/** A rejected send. `clientId` matches the value `send()` returned, when the error is about a post. */
+export interface SendError { code: SendErrorCode; clientId?: string; message?: string }
+
+/** What a channel subscriber hears. */
+export interface ChannelHandlers {
+  /** The channel's full message list: on join and again after every reconnect. Replaces, never merges. */
+  reset(msgs: ChatMessage[]): void;
+  message(m: ChatMessage): void;
+  /** A moderator removed message `id`. */
+  deleted(id: string): void;
+  status(s: ChatStatus): void;
+  error(e: SendError): void;
 }
 
 export interface ChatTransport {
-  /** Human-readable label shown in the dock footer ("Local preview", "Live"). */
+  /** Human-readable label shown in the dock footer ("Live", "Demo chat: …"). */
   readonly label: string;
-  /**
-   * Start receiving a channel. Call `onMessages` once with recent history, then
-   * again with each new message. Returns an unsubscribe function.
-   */
-  subscribe(channel: string, onMessages: (msgs: ChatMessage[]) => void): () => void;
-  send(channel: string, user: string, text: string): Promise<void>;
+  /** The current user, or null until the backend has assigned one. */
+  readonly me: ChatIdentity | null;
+  /** Called with the identity once known (and again if it changes). Returns an unsubscribe function. */
+  onIdentity(cb: (me: ChatIdentity) => void): () => void;
+  /** Start receiving a channel. Returns an unsubscribe function. */
+  subscribe(channel: string, handlers: ChannelHandlers): () => void;
+  /** Post to a subscribed channel. Returns a clientId; a rejection arrives as `error` carrying it. */
+  send(channel: string, text: string): string;
 }
 
-/**
- * Stand-in transport with no server: messages persist in localStorage and are
- * shared live between tabs of this browser via BroadcastChannel. Good enough to
- * build and test the UI; it is NOT multi-user.
- */
-export class LocalTransport implements ChatTransport {
-  readonly label: string = 'Local preview — messages stay in this browser';
-  private bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('dc-chat') : null;
-  private subs = new Map<string, Set<(m: ChatMessage[]) => void>>();
+export const MAX_MESSAGE_LENGTH = 500;
 
-  constructor() {
-    this.bc?.addEventListener('message', (e) => this.deliver(e.data as ChatMessage));
-  }
-
-  private key(ch: string) { return `dc.chat.${ch}`; }
-
-  protected history(ch: string): ChatMessage[] {
-    try { return JSON.parse(localStorage.getItem(this.key(ch)) || '[]'); } catch { return []; }
-  }
-
-  protected deliver(m: ChatMessage) {
-    this.subs.get(m.channel)?.forEach((cb) => cb([m]));
-  }
-
-  subscribe(channel: string, cb: (m: ChatMessage[]) => void) {
-    let set = this.subs.get(channel);
-    if (!set) this.subs.set(channel, (set = new Set()));
-    set.add(cb);
-    queueMicrotask(() => cb(this.history(channel)));
-    return () => { set!.delete(cb); };
-  }
-
-  async send(channel: string, user: string, text: string) {
-    const m: ChatMessage = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, channel, user, text, ts: Date.now() };
-    const h = [...this.history(channel), m].slice(-200);
-    try { localStorage.setItem(this.key(channel), JSON.stringify(h)); } catch { /* quota */ }
-    this.deliver(m);
-    this.bc?.postMessage(m);
-  }
+// Set once at startup (main.tsx), before the app renders. Null means chat is off.
+let transport: ChatTransport | null = null;
+export const chatEnabled = () => transport !== null;
+export function getTransport(): ChatTransport {
+  if (!transport) throw new Error('Chat is off: no transport (set VITE_CHAT_SERVER or use ?mock)');
+  return transport;
 }
-
-let transport: ChatTransport = new LocalTransport();
-export const getTransport = () => transport;
 export function setTransport(t: ChatTransport) { transport = t; }

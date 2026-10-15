@@ -8,7 +8,6 @@ export interface DockState {
   joined: string[];            // game channels the user has opened, in tab order
   expanded: boolean;
   height: number;              // px, when expanded
-  user: string;
 }
 
 const KEY = 'dc.chatdock';
@@ -16,8 +15,12 @@ const KEY = 'dc.chatdock';
 function load(): DockState {
   // First visit: open on desktop so chat is noticed; collapsed on phones, where it would cover most of the screen.
   const wide = typeof matchMedia === 'function' && matchMedia('(min-width: 701px)').matches;
-  const def: DockState = { channel: 'global', joined: [], expanded: wide, height: 260, user: `fan${Math.floor(1000 + Math.random() * 9000)}` };
-  try { return { ...def, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return def; }
+  const def: DockState = { channel: 'global', joined: [], expanded: wide, height: 260 };
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+    delete saved.user; // nicknames were client-chosen before hobbychat; names now come from the server
+    return { ...def, ...saved };
+  } catch { return def; }
 }
 
 let state = load();
@@ -48,7 +51,6 @@ export const dock = {
   },
   toggle(expanded = !state.expanded) { set({ expanded }); },
   setHeight(height: number) { set({ height: Math.max(160, Math.min(height, Math.round(innerHeight * 0.8))) }); },
-  setUser(user: string) { const u = user.trim().slice(0, 24); if (u) set({ user: u }); },
 };
 
 export function useDock(): DockState {

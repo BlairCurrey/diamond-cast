@@ -1,8 +1,9 @@
-import { LocalTransport, type ChatMessage } from '../chat/transport';
+import { MAX_MESSAGE_LENGTH, type ChannelHandlers, type ChatIdentity, type ChatMessage, type ChatTransport } from '../chat/transport';
 
 // Demo chat for ?mock: every room opens with some backlog and simulated fans keep
-// posting every few seconds, so the dock can be judged with real content. Your own
-// messages still go through LocalTransport (this browser only).
+// posting every few seconds, so the dock can be judged with real content. It's a
+// demo fixture, not a chat: you post as a fixed "you", and your messages live in
+// memory only (gone on reload).
 
 const USERS = ['dugout_dan', 'curveball_kate', 'bleacherbum', 'sabermetrix', 'rally_cap', 'nachos4life', 'fourseamer', 'twinbill', 'texas_leaguer', 'can_of_corn', 'seventh_stretch', 'golden_sombrero'];
 
@@ -62,24 +63,51 @@ function backlog(ch: string): ChatMessage[] {
   let ts = SESSION_START - 25 * 60_000;
   return Array.from({ length: n }, (_, i) => {
     ts += 30_000 + r() * 90_000;
-    return { id: `mock-${ch}-${i}`, channel: ch, user: USERS[Math.floor(r() * USERS.length)], text: lines[Math.floor(r() * lines.length)], ts: Math.min(ts, SESSION_START - 5_000) };
+    const user = USERS[Math.floor(r() * USERS.length)];
+    return { id: `mock-${ch}-${i}`, channel: ch, uid: `mock-${user}`, user, text: lines[Math.floor(r() * lines.length)], ts: Math.min(ts, SESSION_START - 5_000) };
   });
 }
 
-export class MockChatTransport extends LocalTransport {
-  override readonly label = 'Demo chat: simulated fans; your messages stay in this browser';
+export class MockChatTransport implements ChatTransport {
+  readonly label = 'Demo chat: simulated fans; your messages vanish on reload';
+  readonly me: ChatIdentity = { uid: 'mock-you', name: 'you' };
+  private subs = new Map<string, Set<ChannelHandlers>>();
+  private sent = new Map<string, ChatMessage[]>();
   private live = new Map<string, { refs: number; timer?: number }>();
   private seq = 0;
 
-  override subscribe(channel: string, cb: (m: ChatMessage[]) => void) {
-    let first = true;
-    const off = super.subscribe(channel, (msgs) => {
-      if (!first) return cb(msgs);
-      first = false;
-      cb([...backlog(channel), ...msgs].sort((a, b) => a.ts - b.ts));
+  onIdentity(cb: (me: ChatIdentity) => void) {
+    queueMicrotask(() => cb(this.me));
+    return () => {};
+  }
+
+  subscribe(channel: string, h: ChannelHandlers) {
+    let set = this.subs.get(channel);
+    if (!set) this.subs.set(channel, (set = new Set()));
+    set.add(h);
+    queueMicrotask(() => {
+      if (!set!.has(h)) return;
+      h.status('open');
+      h.reset([...backlog(channel), ...(this.sent.get(channel) ?? [])].sort((a, b) => a.ts - b.ts));
     });
     this.start(channel);
-    return () => { off(); this.stop(channel); };
+    return () => { set!.delete(h); this.stop(channel); };
+  }
+
+  send(channel: string, text: string) {
+    const clientId = `mock-send-${++this.seq}`;
+    if (text.length > MAX_MESSAGE_LENGTH) {
+      queueMicrotask(() => this.subs.get(channel)?.forEach((h) => h.error({ code: 'too_long', clientId })));
+      return clientId;
+    }
+    const m: ChatMessage = { id: `mock-you-${this.seq}`, channel, uid: this.me.uid, user: this.me.name, text, ts: Date.now(), clientId };
+    this.sent.set(channel, [...(this.sent.get(channel) ?? []), m]);
+    this.deliver(m);
+    return clientId;
+  }
+
+  private deliver(m: ChatMessage) {
+    this.subs.get(m.channel)?.forEach((h) => h.message(m));
   }
 
   private start(ch: string) {
@@ -91,7 +119,8 @@ export class MockChatTransport extends LocalTransport {
     const lines = linesFor(ch);
     const tick = () => {
       st.timer = window.setTimeout(() => {
-        this.deliver({ id: `mock-live-${ch}-${++this.seq}`, channel: ch, user: USERS[Math.floor(r() * USERS.length)], text: lines[Math.floor(r() * lines.length)], ts: Date.now() });
+        const user = USERS[Math.floor(r() * USERS.length)];
+        this.deliver({ id: `mock-live-${ch}-${++this.seq}`, channel: ch, uid: `mock-${user}`, user, text: lines[Math.floor(r() * lines.length)], ts: Date.now() });
         tick();
       }, (ch === 'global' ? 5_000 : 7_000) + r() * 9_000);
     };

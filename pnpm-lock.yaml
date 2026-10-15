@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      hobbychat:
+        specifier: 0.2.0
+        version: 0.2.0
       preact:
         specifier: ^11.0.1
         version: 11.0.1
@@ -689,6 +692,9 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
+  hobbychat@0.2.0:
+    resolution: {integrity: sha512-DL3BXTDEUjJz4XH1nCCNJONeN3mEUtHG5EHzT6Qo8KapSQL/kS2K43eaupyzbbZH6k+84/U8Mw+Av55eiWIb3w==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -1363,6 +1369,8 @@ snapshots:
   gensync@1.0.0-beta.2: {}
 
   he@1.2.0: {}
+
+  hobbychat@0.2.0: {}
 
   js-tokens@4.0.0: {}
 

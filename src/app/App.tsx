@@ -6,6 +6,7 @@ import { Player } from './views/Player';
 import { Team } from './views/Team';
 import { Standings } from './views/Standings';
 import { ChatDock } from './chat/ChatDock';
+import { chatEnabled } from './chat/transport';
 import { useTheme } from './api/hooks';
 import { MOCK } from './api/client';
 import * as theme from '../shared/theme';
@@ -47,7 +48,7 @@ export function App() {
         {route.name === 'standings' && <Standings />}
         {route.name === 'notfound' && <div class="page empty">Page not found. <a href={href.scores()}>Go to today's scores</a>.</div>}
       </main>
-      <ChatDock />
+      {chatEnabled() && <ChatDock />}
     </>
   );
 }
