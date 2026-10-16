@@ -54,6 +54,23 @@ body.site { background: var(--bg); display: flex; flex-direction: column; min-he
 .tag { display: inline-block; min-width: 24px; text-align: center; font-size: 9px; font-weight: bold; padding: 1px 3px; border-radius: 2px; color: #fff; margin-right: 4px; }
 .tag.hit { background: var(--inplay); } .tag.out { background: #7b8088; } .tag.k { background: var(--strike); }
 
+/* Chat card under the gamecast: a still of the app's chat dock for the same game. */
+.shot-chat { margin-top: 10px; }
+.shot-chat-head { display: flex; align-items: flex-end; gap: 4px; padding: 4px 8px 0; background: linear-gradient(var(--bar-1), var(--bar-2)); border-bottom: 1px solid var(--border); }
+.shot-chat-head b { font-size: 11px; align-self: center; margin-right: 6px; padding-bottom: 4px; }
+.shot-tab { padding: 3px 8px; border: 1px solid var(--border); border-bottom: 0; background: var(--bar-2); font-weight: bold; color: var(--muted); margin-bottom: -1px; }
+.shot-tab.on { background: var(--panel); color: var(--text); }
+.shot-tab i { font-style: normal; display: inline-block; min-width: 14px; padding: 0 3px; border-radius: 7px; background: var(--live); color: #fff; font-size: 9px; text-align: center; line-height: 14px; margin-left: 2px; }
+.shot-msgs { padding: 6px 8px; }
+.shot-msgs div { display: grid; grid-template-columns: 2.4em 1fr; gap: 6px; align-items: baseline; padding: 1px 0; line-height: 1.45; }
+.shot-msgs .t { color: var(--muted); font-size: 10px; text-align: right; font-variant-numeric: tabular-nums; }
+.shot-msgs b { color: var(--link); font-weight: normal; }
+.shot-msgs .new { animation: shot-new 1.6s ease-out 1s both; }
+@keyframes shot-new { from { opacity: 0; transform: translateY(4px); } 30% { opacity: 1; transform: none; background: var(--highlight); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .shot-msgs .new { animation: none; } }
+.shot-input { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 0 8px 8px; padding: 4px 6px; border: 1px solid var(--border); color: var(--muted); }
+.shot-send { padding: 1px 8px; background: var(--link); color: #fff; border-radius: 2px; font-weight: bold; opacity: .85; }
+
 .site-foot { border-top: 1px solid var(--border); background: var(--panel); padding: 14px 0 24px; font-size: 12px; }
 .site-foot p { margin: 6px 0 0; }
 
