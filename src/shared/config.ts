@@ -1,6 +1,5 @@
 // Single place for site-wide knobs. Rename the product here.
 export const SITE_NAME = "Diamond Cast";
-export const SITE_DOMAIN = "dmdcast.com"; // shown on the app's "back to home" link
 
 // MLB Stats API origin. It sends permissive CORS headers, so the browser can call it
 // directly and no backend is needed. Point this at your own pass-through proxy/cache

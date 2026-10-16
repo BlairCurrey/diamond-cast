@@ -10,7 +10,7 @@ import { chatEnabled } from './chat/transport';
 import { useTheme } from './api/hooks';
 import { MOCK } from './api/client';
 import * as theme from '../shared/theme';
-import { SITE_DOMAIN, SITE_NAME } from '../shared/config';
+import { SITE_NAME } from '../shared/config';
 
 export function App() {
   const route = useRoute();
@@ -28,7 +28,7 @@ export function App() {
       {/* Deliberately minimal chrome: not the marketing site's nav/footer, just a way back. */}
       <header class="appbar">
         <div class="appbar-left">
-          <a class="appbar-back" href={import.meta.env.BASE_URL} title={`Back to the ${SITE_NAME} home page`}>&lsaquo; {SITE_DOMAIN}</a>
+          <a class="appbar-back" href={import.meta.env.BASE_URL} title={`Back to the ${SITE_NAME} home page`}>&lsaquo; Home</a>
           <a class="appbar-brand" href={href.scores()}><span class="appbar-mark">◆</span> {SITE_NAME}</a>
           <nav class="appbar-nav">
             <a href={href.scores()} class={section === 'scores' ? 'on' : ''}>Scores</a>
