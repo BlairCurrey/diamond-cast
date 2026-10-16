@@ -3,7 +3,12 @@
 A static MLB site: a marketing home page at `/` and a single-page app at `/app/`
 (scoreboard, live gamecast, box scores, play-by-play, player/team pages, standings,
 and a docked chat). Data comes straight from the browser to MLB's public Stats API.
-No backend.
+No backend of its own.
+
+Chat (a site-wide room plus a room for every game) runs on
+[hobbychat](https://github.com/BlairCurrey/hobbychat), my self-hosted chat server for
+hobby apps, free to run on Cloudflare. Point the app at one with `VITE_CHAT_SERVER`;
+without it the site has no chat. See [docs/chat.md](docs/chat.md).
 
 ```
 pnpm install
