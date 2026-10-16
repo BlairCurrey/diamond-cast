@@ -26,11 +26,15 @@ body.site { background: var(--bg); display: flex; flex-direction: column; min-he
 .tk.live .st { color: var(--live); }
 .ticker-all { white-space: nowrap; }
 
-.hero { display: grid; grid-template-columns: 1fr 430px; gap: 30px; padding: 72px 0 80px; align-items: center; }
-.hero h1 { font-size: 34px; letter-spacing: -.02em; margin-bottom: 12px; }
-.lede { font-size: 16px; line-height: 1.5; color: var(--text); margin: 0 0 14px; }
-.checks { list-style: none; padding: 0; margin: 0 0 18px; }
-.checks li { padding: 3px 0 3px 22px; position: relative; font-size: 14px; }
+.hero { display: grid; grid-template-columns: 1fr 430px; gap: 30px; padding: 72px 0 80px; align-items: stretch; }
+/* The copy spans the full height of the stills beside it: headline level with the box
+   score's top edge, button level with the chat's bottom edge. */
+.hero-copy { display: flex; flex-direction: column; justify-content: space-between; }
+.hero-cta { margin: 0; }
+.hero h1 { font-size: 40px; letter-spacing: -.02em; margin-bottom: 16px; }
+.lede { font-size: 17px; line-height: 1.55; color: var(--text); margin: 0; }
+.checks { list-style: none; padding: 0; margin: 0; }
+.checks li { padding: 4px 0 4px 24px; position: relative; font-size: 15px; }
 .checks li::before { content: "✓"; position: absolute; left: 2px; color: var(--ball); font-weight: bold; }
 .btn.big { font-size: 15px; padding: 8px 16px; }
 
@@ -76,6 +80,9 @@ body.site { background: var(--bg); display: flex; flex-direction: column; min-he
 
 @media (max-width: 860px) {
   .hero { grid-template-columns: 1fr; padding: 32px 0 40px; }
+  .hero-copy { display: block; }
+  .hero h1 { font-size: 32px; }
+  .lede, .checks { margin-bottom: 16px; }
   .hero-shot { max-width: 430px; }
   .site-nav > a:not(.btn) { display: none; }
 }
