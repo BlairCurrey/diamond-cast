@@ -24,7 +24,7 @@ async function ticker() {
     box.innerHTML = '';
     for (const g of games.slice(0, 10)) {
       const a = document.createElement('a');
-      a.href = `/app/#/game/${g.pk}`;
+      a.href = `app/#/game/${g.pk}`;
       a.className = `tk ${isActive(g.kind) ? 'live' : ''}`;
       const score = (t: typeof g.away) => (g.kind === 'preview' || g.kind === 'postponed' ? '' : String(t.runs ?? 0));
       a.innerHTML = `<span class="st"></span><b></b><span></span><b></b><span></span>`;

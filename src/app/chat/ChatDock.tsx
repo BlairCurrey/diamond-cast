@@ -193,9 +193,8 @@ const ERROR_TEXT: Record<SendError['code'], string> = {
   too_long: `Too long: ${MAX_MESSAGE_LENGTH} characters max.`,
   room_limit: "This room can't take new messages right now.",
   invalid: "That message couldn't be sent.",
+  queue_full: 'Not connected: message not sent. Try again once chat reconnects.',
 };
-
-const NOT_CONNECTED_TEXT = 'Not connected: message not sent. Try again once chat reconnects.';
 
 const STATUS_TEXT: Partial<Record<ChatStatus, string>> = { connecting: 'Connecting…', closed: 'Reconnecting…', banned: 'Banned' };
 
@@ -219,8 +218,7 @@ function Composer({ channel, me, msgs, archived, status, error, label }: {
     const lost = error.clientId ? pending.current.get(error.clientId) : undefined;
     if (error.clientId) pending.current.delete(error.clientId);
     if (lost !== undefined) setText((cur) => (cur.trim() ? cur : lost)); // never silently drop the user's words
-    // While disconnected, a "rate_limited" is the client's send queue overflowing, not the server's limit.
-    setNotice(error.code === 'rate_limited' && status !== 'open' ? NOT_CONNECTED_TEXT : ERROR_TEXT[error.code]);
+    setNotice(ERROR_TEXT[error.code]);
     const t = setTimeout(() => setNotice(null), 5000);
     return () => clearTimeout(t);
   }, [error?.seq]);

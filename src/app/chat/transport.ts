@@ -26,7 +26,8 @@ export interface ChatIdentity { uid: string; name: string }
 
 export type ChatStatus = 'connecting' | 'open' | 'closed' | 'banned';
 
-export type SendErrorCode = 'rate_limited' | 'too_long' | 'room_limit' | 'invalid';
+/** `queue_full`: a send made while disconnected that didn't fit in the reconnect queue. */
+export type SendErrorCode = 'rate_limited' | 'too_long' | 'room_limit' | 'invalid' | 'queue_full';
 /** A rejected send. `clientId` matches the value `send()` returned, when the error is about a post. */
 export interface SendError { code: SendErrorCode; clientId?: string; message?: string }
 
