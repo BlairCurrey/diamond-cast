@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
+import { getJSON } from '../api/client';
 import { usePoll } from '../api/hooks';
 import { ep } from '../api/endpoints';
 import { sbGame, isActive, type SbGame } from '../model/schedule';
@@ -7,9 +8,26 @@ import { href } from '../router';
 import { TeamLogo, PlayerLink, ErrorBox, Loading, Empty } from '../components/common';
 import { BasesMini } from '../components/graphics';
 
+// Offseason: the default view ("Today", no date in the URL) opens on the last day of the
+// most recent World Series instead of an empty page. It only does that when nothing is
+// scheduled from today through the next week, so off days, the All-Star break and gaps
+// between playoff rounds still show today. Unplayed games of a finished series drop out
+// of the schedule, so this starts the day after the World Series ends.
+const offseasonDay = new Map<string, string | null>(); // by today's date; null = show today
+
+async function findOffseasonDay(today: string): Promise<string | null> {
+  const ahead = await getJSON<any>(ep.gamesBetween(today, addDays(today, 7)));
+  if (ahead?.dates?.some((d: any) => d.games?.length)) return null;
+  const ws = await getJSON<any>(ep.gamesBetween(addDays(today, -365), addDays(today, -1), 'W'));
+  return ws?.dates?.at(-1)?.date ?? null;
+}
+
 export function Scoreboard({ date: dateParam }: { date?: string }) {
   const today = baseballToday();
-  const date = isValidYmd(dateParam) ? dateParam : today;
+  const auto = !isValidYmd(dateParam);
+  const [fallback, setFallback] = useState(() => offseasonDay.get(today));
+  const date = isValidYmd(dateParam) ? dateParam : (fallback ?? today);
+  const offseason = auto && fallback ? fallback : null;
   const yesterday = addDays(today, -1);
 
   // Poll quickly while anything is live, slowly if games are still to come today.
@@ -24,6 +42,16 @@ export function Scoreboard({ date: dateParam }: { date?: string }) {
     setInterval_(anyLive ? 15_000 : anyPre && date === today ? 60_000 : null);
   }, [list, date, today]);
 
+  // Nothing on today's default view: find out whether it's the offseason.
+  const checking = auto && fallback === undefined && date === today && !!data && list.length === 0;
+  useEffect(() => {
+    if (!checking) return;
+    let current = true;
+    const done = (d: string | null) => { offseasonDay.set(today, d); if (current) setFallback(d); };
+    findOffseasonDay(today).then(done, () => { if (current) setFallback(null); });
+    return () => { current = false; };
+  }, [checking, today]);
+
   const live = list.filter((g) => isActive(g.kind)).length;
   const final = list.filter((g) => g.kind === 'final').length;
 
@@ -35,7 +63,7 @@ export function Scoreboard({ date: dateParam }: { date?: string }) {
           <h1>{fmtDateLong(date)}</h1>
           <div class="datebar-quick">
             <a href={href.scores(yesterday)} class={date === yesterday ? 'on' : ''}>Yesterday</a>
-            <a href={href.scores()} class={date === today ? 'on' : ''}>Today</a>
+            <a href={offseason ? href.scores(today) : href.scores()} class={date === today ? 'on' : ''}>Today</a>
             <input
               type="date"
               value={date}
@@ -47,6 +75,13 @@ export function Scoreboard({ date: dateParam }: { date?: string }) {
         <a class="btn" href={href.scores(addDays(date, 1))} title="Next day">{fmtDateWeekday(addDays(date, 1))} &raquo;</a>
       </div>
 
+      {offseason && (
+        <div class="sb-note">
+          It's the offseason, so here's the last day of the {offseason.slice(0, 4)} World Series.{' '}
+          <a href={href.scores(today)}>Today's scoreboard &raquo;</a>
+        </div>
+      )}
+
       {list.length > 0 && (
         <div class="sb-summary muted">
           {list.length} game{list.length === 1 ? '' : 's'}
@@ -57,8 +92,8 @@ export function Scoreboard({ date: dateParam }: { date?: string }) {
       )}
 
       {res.error && !data && <ErrorBox error={res.error} retry={res.refresh} />}
-      {!data && !res.error && <Loading what="Loading games" />}
-      {data && list.length === 0 && <Empty>No MLB games scheduled on this date.</Empty>}
+      {((!data && !res.error) || checking) && <Loading what="Loading games" />}
+      {data && list.length === 0 && !checking && <Empty>No MLB games scheduled on this date.</Empty>}
 
       <div class="sb-grid">
         {list.map((g) => <GameCard key={g.pk} g={g} />)}

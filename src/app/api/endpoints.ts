@@ -36,6 +36,10 @@ export const ep = {
   teamSchedule: (teamId: number, start: string, end: string) =>
     `/api/v1/schedule?sportId=1&teamId=${teamId}&startDate=${start}&endDate=${end}&hydrate=team,linescore,decisions,seriesStatus`,
 
+  /** Games between two dates, unhydrated: just what's scheduled. gameType 'W' is the World Series. */
+  gamesBetween: (start: string, end: string, gameType?: string) =>
+    `/api/v1/schedule?sportId=1&startDate=${start}&endDate=${end}` + (gameType ? `&gameType=${gameType}` : ''),
+
   roster: (teamId: number) => `/api/v1/teams/${teamId}/roster?rosterType=active&hydrate=person`,
 };
 

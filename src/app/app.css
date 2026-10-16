@@ -104,6 +104,7 @@ table { border-collapse: collapse; }
 .datebar-quick a.on { font-weight: bold; color: var(--text); }
 .datebar-quick input { font: inherit; font-size: 11px; padding: 1px 3px; border: 1px solid var(--border); background: var(--panel); color: var(--text); }
 .sb-summary { font-size: 12px; margin-bottom: 8px; }
+.sb-note { font-size: 12px; margin-bottom: 10px; padding: 6px 10px; background: var(--panel-alt); border: 1px solid var(--border-soft); }
 
 .sb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 10px; }
 .sb-card { position: relative; background: var(--panel); border: 1px solid var(--border); display: flex; flex-direction: column; }
